@@ -1,0 +1,75 @@
+{
+  "info": {
+    "name": "EcoGo API — Flujo completo",
+    "_postman_id": "9b2b3b39-ecogo-4f4f-9f2f-000000000001",
+    "description": "Colección para probar usuarios, solicitudes, asignación, estados y reportes del backend EcoGo.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "codigoSolicitud", "value": "ECO-1048" },
+    { "key": "nuevaSolicitudCodigo", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 — Salud del servicio",
+      "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/actuator/health", "host": ["{{baseUrl}}"], "path": ["actuator", "health"] } },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Responde 200', function () { pm.response.to.have.status(200); });", "pm.test('Servicio UP', function () { pm.expect(pm.response.json().status).to.eql('UP'); });"] } }]
+    },
+    {
+      "name": "02 — Listar usuarios",
+      "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/usuarios", "host": ["{{baseUrl}}"], "path": ["api", "usuarios"] } },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Responde 200', function () { pm.response.to.have.status(200); });", "pm.test('Incluye usuarios demo', function () { pm.expect(pm.response.json().length).to.be.above(0); });"] } }]
+    },
+    {
+      "name": "03 — Crear solicitud",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"material\": \"CARTON\",\n  \"cantidadKg\": 14.5,\n  \"direccion\": \"Av. Primavera 880, Surco\",\n  \"fechaRecojo\": \"{{fechaFutura}}\",\n  \"observaciones\": \"Cajas limpias listas para recoger.\",\n  \"solicitanteId\": 1\n}" },
+        "url": { "raw": "{{baseUrl}}/api/solicitudes", "host": ["{{baseUrl}}"], "path": ["api", "solicitudes"] }
+      },
+      "event": [{ "listen": "prerequest", "script": { "exec": ["const future = new Date(Date.now() + 86400000 * 4).toISOString().slice(0, 10);", "pm.collectionVariables.set('fechaFutura', future);"] } }, { "listen": "test", "script": { "exec": ["pm.test('Responde 201', function () { pm.response.to.have.status(201); });", "pm.test('Nace pendiente', function () { pm.expect(pm.response.json().estado).to.eql('PENDIENTE'); });", "pm.collectionVariables.set('nuevaSolicitudCodigo', pm.response.json().codigo);"] } }]
+    },
+    {
+      "name": "04 — Consultar solicitud",
+      "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/solicitudes/{{nuevaSolicitudCodigo}}", "host": ["{{baseUrl}}"], "path": ["api", "solicitudes", "{{nuevaSolicitudCodigo}}"] } },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Responde 200', function () { pm.response.to.have.status(200); });", "pm.test('Tiene código', function () { pm.expect(pm.response.json().codigo).to.eql(pm.collectionVariables.get('nuevaSolicitudCodigo')); });"] } }]
+    },
+    {
+      "name": "05 — Asignar recolector",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"recolectorId\": 2,\n  \"fechaRecojo\": \"{{fechaFutura}}\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/solicitudes/{{nuevaSolicitudCodigo}}/asignar", "host": ["{{baseUrl}}"], "path": ["api", "solicitudes", "{{nuevaSolicitudCodigo}}", "asignar"] }
+      },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Responde 200', function () { pm.response.to.have.status(200); });", "pm.test('Queda asignada', function () { pm.expect(pm.response.json().estado).to.eql('ASIGNADA'); });"] } }]
+    },
+    {
+      "name": "06 — Marcar en camino",
+      "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"estado\": \"EN_CAMINO\",\n  \"observaciones\": \"Recolector en ruta.\"\n}" }, "url": { "raw": "{{baseUrl}}/api/solicitudes/{{nuevaSolicitudCodigo}}/estado", "host": ["{{baseUrl}}"], "path": ["api", "solicitudes", "{{nuevaSolicitudCodigo}}", "estado"] } },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Responde 200', function () { pm.response.to.have.status(200); });", "pm.test('Queda en camino', function () { pm.expect(pm.response.json().estado).to.eql('EN_CAMINO'); });"] } }]
+    },
+    {
+      "name": "07 — Completar servicio",
+      "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"estado\": \"COMPLETADA\",\n  \"cantidadRecogidaKg\": 13.8,\n  \"observaciones\": \"Servicio completado correctamente.\"\n}" }, "url": { "raw": "{{baseUrl}}/api/solicitudes/{{nuevaSolicitudCodigo}}/estado", "host": ["{{baseUrl}}"], "path": ["api", "solicitudes", "{{nuevaSolicitudCodigo}}", "estado"] } },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Responde 200', function () { pm.response.to.have.status(200); });", "pm.test('Queda completada', function () { pm.expect(pm.response.json().estado).to.eql('COMPLETADA'); });"] } }]
+    },
+    {
+      "name": "08 — Filtrar solicitudes completadas",
+      "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/solicitudes?estado=COMPLETADA", "host": ["{{baseUrl}}"], "path": ["api", "solicitudes"], "query": [{ "key": "estado", "value": "COMPLETADA" }] } },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Responde 200', function () { pm.response.to.have.status(200); });", "pm.test('Todos están completados', function () { pm.response.json().forEach(item => pm.expect(item.estado).to.eql('COMPLETADA')); });"] } }]
+    },
+    {
+      "name": "09 — Reporte resumen",
+      "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/reportes/resumen", "host": ["{{baseUrl}}"], "path": ["api", "reportes", "resumen"] } },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Responde 200', function () { pm.response.to.have.status(200); });", "pm.test('Incluye métricas', function () { const body = pm.response.json(); pm.expect(body).to.have.property('solicitudesTotales'); pm.expect(body).to.have.property('kgRecogidos'); });"] } }]
+    },
+    {
+      "name": "10 — Validación de error",
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{}" }, "url": { "raw": "{{baseUrl}}/api/solicitudes", "host": ["{{baseUrl}}"], "path": ["api", "solicitudes"] } },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Responde 400', function () { pm.response.to.have.status(400); });", "pm.test('Devuelve campos inválidos', function () { pm.expect(pm.response.json()).to.have.property('fields'); });"] } }]
+    }
+  ]
+}

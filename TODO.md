@@ -1,0 +1,25 @@
+# EcoGo · resultados del prototipo
+
+- [x] Inicio de sesión demo y navegación diferenciada para ciudadano, recolector y administrador.
+  - El usuario puede elegir uno de los tres roles demo e ingresar al portal.
+  - Cada rol muestra únicamente las vistas principales que necesita.
+- [x] Panel principal con resumen de actividad y accesos relevantes según el rol.
+  - Se muestran indicadores, actividad reciente y progreso mensual.
+- [x] Registro de solicitudes de recojo.
+  - El formulario incluye material, cantidad aproximada, dirección, fecha, rango horario y observaciones.
+  - La solicitud genera un código de confirmación y entra al estado Pendiente.
+- [x] Listado, búsqueda y filtros de solicitudes.
+  - Se puede buscar por código, material, dirección o recolector y filtrar por estado.
+- [x] Seguimiento visual del ciclo de una solicitud.
+  - Se representan los estados Pendiente, Asignada, En camino y Completada con texto y color.
+- [x] Asignación simulada de solicitudes pendientes.
+  - El administrador puede escoger un recolector activo y una fecha programada.
+- [x] Vista del recolector y actualización del servicio.
+  - El recolector puede mover servicios entre Asignada, En camino y Completada.
+  - Al completar un servicio se registra una cantidad recogida estimada.
+- [x] Panel administrativo con usuarios, recolectores y solicitudes.
+  - Se incluyen tablas y tarjetas de gestión simulada.
+- [x] Estadísticas básicas.
+  - Se muestran materiales recuperados, cumplimiento, servicios y distritos activos.
+- [x] Diseño responsivo y accesible.
+  - La interfaz adapta menú, tablas, formularios y tarjetas a pantallas pequeñas.
